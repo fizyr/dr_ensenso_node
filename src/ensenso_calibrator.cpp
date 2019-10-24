@@ -6,6 +6,7 @@ EnsensoCalibratorNode::EnsensoCalibratorNode(
 	std::string const & initialize_calibration_service,
 	std::string const & record_calibration_service,
 	std::string const & finalize_calibration_service,
+	std::string const & get_calibration_service,
 	bool wait_for_services,
 	bool store_calibration
 ) : store_calibration_{store_calibration} {
@@ -13,6 +14,7 @@ EnsensoCalibratorNode::EnsensoCalibratorNode(
 	services_.initialize_calibration.connect(*this, initialize_calibration_service, wait_for_services);
 	services_.record_calibration    .connect(*this, record_calibration_service, wait_for_services);
 	services_.finalize_calibration  .connect(*this, finalize_calibration_service, wait_for_services);
+	services_.get_calibration       .connect(*this, get_calibration_service, wait_for_services);
 }
 
 estd::result<void, estd::error> EnsensoCalibratorNode::initializeCalibration(InitializeCalibrationConfig const & config) {
@@ -65,6 +67,19 @@ estd::result<EnsensoCalibratorNode::CalibrationResult, estd::error> EnsensoCalib
 			dr::toEigen(response.pattern_pose.pose),
 			response.residual_error
 		};
+	} catch (dr::ServiceError const & e) {
+		return estd::error{e.what()};
+	}
+}
+
+estd::result<Eigen::Isometry3d, estd::error> EnsensoCalibratorNode::getCalibration() {
+	// Construct the request.
+	dr_msgs::GetPose::Request request;
+
+	// Try to call the service.
+	try {
+		dr_msgs::GetPose::Response response = services_.get_calibration(request);
+		return dr::toEigen(response.data);
 	} catch (dr::ServiceError const & e) {
 		return estd::error{e.what()};
 	}
