@@ -1,6 +1,7 @@
 #pragma once
 
 #include <dr_ensenso_msgs/InitializeCalibration.h>
+#include <dr_msgs/GetPose.h>
 #include <dr_msgs/SendPose.h>
 #include <dr_ensenso_msgs/FinalizeCalibration.h>
 #include <dr_ros/service_client.hpp>
@@ -62,6 +63,9 @@ private:
 
 		/// Service for finalizing a calibration sequence.
 		dr::ServiceClient<dr_ensenso_msgs::FinalizeCalibration> finalize_calibration;
+
+		/// Service for getting the calibration on the camera.
+		dr::ServiceClient<dr_msgs::GetPose> get_calibration;
 	} services_;
 
 	bool store_calibration_ = true;
@@ -71,6 +75,7 @@ public:
 		std::string const & initialize_calibration_service, ///< Service name for the initialization of the calibration.
 		std::string const & record_calibration_service,     ///< Service name for the detect calibration pattern service.
 		std::string const & finalize_calibration_service,   ///< Service name for finalizing the calibration.
+		std::string const & get_calibration_service,        ///< Service name for getting the calibration on the camera.
 		bool wait_for_services = false,                     ///< If true, waits for the services to come alive.
 		bool store_calibration = true                       ///< If true, stores the calibration in the Ensenso.
 	);
@@ -83,6 +88,9 @@ public:
 
 	/// Finalizes the calibration, returning the result.
 	estd::result<CalibrationResult, estd::error> finalizeCalibration();
+
+	/// Retrieves the calibration from the camera, returning the result.
+	estd::result<Eigen::Isometry3d, estd::error> getCalibration();
 };
 
 }
