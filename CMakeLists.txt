@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
 	dr_eigen
 	dr_ensenso
 	dr_ensenso_msgs
+	dr_log
 	dr_msgs
 	dr_ros
 	dr_util
