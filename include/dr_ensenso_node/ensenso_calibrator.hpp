@@ -37,6 +37,12 @@ public:
 		/// Depending on the value of camera_moving, this pose is defined in either moving_frame or fixed_frame.
 		std::optional<Eigen::Isometry3d> pattern_guess;
 
+		// Array of length 3 to indicate if the robot has a fixed translation.
+		std::optional<std::array<bool, 3>> translation_fixed;
+
+		// Array of length 3 to indicate if the robot has a fixed rotation.
+		std::optional<std::array<bool, 3>> rotation_fixed;
+
 		/// Directory in which calibration information will be stored (leave empty to disable).
 		std::string dump_dir;
 	};

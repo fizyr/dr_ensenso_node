@@ -138,7 +138,7 @@ class EnsensoNode: public Node {
 	/// Timeout in milliseconds for retrieving.
 	unsigned int timeout;
 
-	struct {
+	struct CalibrationInfo {
 		/// Frame to calibrate the camera to when camera_moving is true (gripper frame).
 		std::string moving_frame;
 
@@ -159,6 +159,12 @@ class EnsensoNode: public Node {
 
 		/// Directory where calibration data will be dumped to.
 		std::string dump_dir;
+
+		// Array of length 3 to indicate if the robot has a fixed translation.
+		std::array<bool, 3> translation_fixed;
+
+		// Array of length 3 to indicate if the robot has a fixed rotation.
+		std::array<bool, 3> rotation_fixed;
 	} auto_calibration;
 
 	/// If true, publishes recorded data.
@@ -252,12 +258,7 @@ public:
 private:
 	/// Resets calibration state from this node.
 	void resetCalibration() {
-		auto_calibration.moving_frame  = "";
-		auto_calibration.fixed_frame   = "";
-		auto_calibration.camera_guess  = std::nullopt;
-		auto_calibration.pattern_guess = std::nullopt;
-		auto_calibration.robot_poses.clear();
-		auto_calibration.dump_dir      = "";
+		auto_calibration = CalibrationInfo{};
 	}
 
 protected:
@@ -572,6 +573,10 @@ protected:
 
 	bool onInitializeCalibration(dr_ensenso_msgs::InitializeCalibration::Request & req, dr_ensenso_msgs::InitializeCalibration::Response &) {
 		namespace fs = boost::filesystem;
+
+		if (req.translation_fixed.size() != 0 && req.translation_fixed.size() != 3) throw std::runtime_error("translation_fixed is expected to be of length 0 or 3");
+		if (req.rotation_fixed.size()    != 0 && req.rotation_fixed.size()    != 3) throw std::runtime_error("rotation_fixed is expected to be of length 0 or 3");
+
 		ensenso_camera->discardCalibrationPatterns();
 		ensenso_camera->clearWorkspaceCalibration();
 		resetCalibration();
@@ -580,6 +585,9 @@ protected:
 		auto_calibration.moving_frame  = req.moving_frame;
 		auto_calibration.fixed_frame   = req.fixed_frame;
 		auto_calibration.dump_dir      = (fs::path(req.dump_dir) / dr::getTimeString()).native();
+
+		if (req.translation_fixed.size() != 0) std::copy(req.translation_fixed.begin(), req.translation_fixed.end(), auto_calibration.translation_fixed.begin());
+		if (req.rotation_fixed.size() != 0)    std::copy(req.rotation_fixed.begin(),    req.rotation_fixed.end(),    auto_calibration.rotation_fixed.begin());
 
 		// check for valid camera guess
 		if (req.camera_guess.position.x == 0 && req.camera_guess.position.y == 0 && req.camera_guess.position.z == 0 &&
@@ -671,12 +679,14 @@ protected:
 	}
 
 	bool onFinalizeCalibration(dr_ensenso_msgs::FinalizeCalibration::Request & req, dr_ensenso_msgs::FinalizeCalibration::Response & res) {
-		auto const & camera_moving = auto_calibration.camera_moving;
-		auto const & moving_frame  = auto_calibration.moving_frame;
-		auto const & fixed_frame   = auto_calibration.fixed_frame;
-		auto const & camera_guess  = auto_calibration.camera_guess;
-		auto const & pattern_guess = auto_calibration.pattern_guess;
-		auto const & robot_poses   = auto_calibration.robot_poses;
+		auto const & camera_moving     = auto_calibration.camera_moving;
+		auto const & moving_frame      = auto_calibration.moving_frame;
+		auto const & fixed_frame       = auto_calibration.fixed_frame;
+		auto const & camera_guess      = auto_calibration.camera_guess;
+		auto const & pattern_guess     = auto_calibration.pattern_guess;
+		auto const & robot_poses       = auto_calibration.robot_poses;
+		auto const & translation_fixed = auto_calibration.translation_fixed;
+		auto const & rotation_fixed    = auto_calibration.rotation_fixed;
 
 		DR_DEBUG("Recorded patterns: " << getNx<int>(NxLibItem()[itmPatternBuffer][itmAll][itmStereoPatternCount]));
 		DR_DEBUG("Recorded robot poses: " << robot_poses.size());
@@ -697,6 +707,8 @@ protected:
 					camera_moving,
 					camera_guess,
 					pattern_guess,
+					translation_fixed,
+					rotation_fixed,
 					camera_moving ? moving_frame : fixed_frame,
 					&parameters,
 					&result

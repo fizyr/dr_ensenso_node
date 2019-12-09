@@ -25,6 +25,9 @@ estd::result<void, estd::error> EnsensoCalibratorNode::initializeCalibration(Ini
 	request.moving_frame  = config.moving_frame;
 	request.dump_dir      = config.dump_dir;
 
+	if (config.translation_fixed) std::copy(config.translation_fixed->begin(), config.translation_fixed->end(), std::back_inserter(request.translation_fixed));
+	if (config.rotation_fixed)    std::copy(config.rotation_fixed->begin(),    config.rotation_fixed->end(),    std::back_inserter(request.rotation_fixed));
+
 	if (config.camera_guess)  request.camera_guess  = dr::toRosPose(*config.camera_guess);
 	if (config.pattern_guess) request.pattern_guess = dr::toRosPose(*config.pattern_guess);
 
