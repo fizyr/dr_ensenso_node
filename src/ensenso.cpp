@@ -741,7 +741,7 @@ protected:
 		return true;
 	}
 
-	bool onCalibrateWorkspace(dr_ensenso_msgs::Calibrate::Request & req, dr_ensenso_msgs::Calibrate::Response &) {
+	bool onCalibrateWorkspace(dr_ensenso_msgs::Calibrate::Request & req, dr_ensenso_msgs::Calibrate::Response & res) {
 		DR_INFO("Performing workspace calibration.");
 
 		if (req.frame_id.empty()) {
@@ -753,6 +753,14 @@ protected:
 		DR_INFO("Found calibration pattern at:\n" << dr::toYaml(pattern_pose));
 		DR_INFO("Defined pattern pose:\n" << dr::toYaml(dr::toEigen(req.pattern)));
 		ensenso_camera->setWorkspaceCalibration(pattern_pose, req.frame_id, dr::toEigen(req.pattern), true);
+
+		std::optional<Eigen::Isometry3d> camera_pose = ensenso_camera->getWorkspaceCalibration();
+		if (!camera_pose) {
+			DR_ERROR("Failed to get camera pose after calibrating.");
+			return false;
+		}
+
+		res.camera_pose = dr::toRosPose(*camera_pose);
 		return true;
 	}
 
