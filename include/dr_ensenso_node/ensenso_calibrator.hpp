@@ -1,12 +1,13 @@
 #pragma once
 
+#include <dr_eigen/ros.hpp>
+#include <dr_ensenso_msgs/Calibrate.h>
+#include <dr_ensenso_msgs/FinalizeCalibration.h>
 #include <dr_ensenso_msgs/InitializeCalibration.h>
 #include <dr_msgs/GetPose.h>
 #include <dr_msgs/SendPose.h>
-#include <dr_ensenso_msgs/FinalizeCalibration.h>
-#include <dr_ros/service_client.hpp>
 #include <dr_ros/node.hpp>
-#include <dr_eigen/ros.hpp>
+#include <dr_ros/service_client.hpp>
 
 #include <estd/result.hpp>
 
@@ -66,6 +67,9 @@ private:
 
 		/// Service for getting the calibration on the camera.
 		dr::ServiceClient<dr_msgs::GetPose> get_calibration;
+
+		/// Service client for performing a workspace calibration.
+		dr::ServiceClient<dr_ensenso_msgs::Calibrate> workspace_calibration;
 	} services_;
 
 	bool store_calibration_ = true;
@@ -76,6 +80,7 @@ public:
 		std::string const & record_calibration_service,     ///< Service name for the detect calibration pattern service.
 		std::string const & finalize_calibration_service,   ///< Service name for finalizing the calibration.
 		std::string const & get_calibration_service,        ///< Service name for getting the calibration on the camera.
+		std::string const & workspace_calibration_service,  ///< Service name for performing a workspace calibration.
 		bool wait_for_services = false,                     ///< If true, waits for the services to come alive.
 		bool store_calibration = true                       ///< If true, stores the calibration in the Ensenso.
 	);
@@ -91,6 +96,14 @@ public:
 
 	/// Retrieves the calibration from the camera, returning the result.
 	estd::result<Eigen::Isometry3d, estd::error> getCalibration();
+
+
+	/// Performs a workspace calibration.
+	estd::result<Eigen::Isometry3d, estd::error> workspaceCalibration(
+		Eigen::Isometry3d const & pattern_pose, ///< Pose of the pattern, defined in the frame to calibrate to.
+		std::string const & frame_id,           ///< The name of the frame to calibrate to.
+		int samples                             ///< Number of sampels to average the results over, useful for reducing possible noise.
+	);
 };
 
 }

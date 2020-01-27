@@ -7,6 +7,7 @@ EnsensoCalibratorNode::EnsensoCalibratorNode(
 	std::string const & record_calibration_service,
 	std::string const & finalize_calibration_service,
 	std::string const & get_calibration_service,
+	std::string const & workspace_calibration_service,
 	bool wait_for_services,
 	bool store_calibration
 ) : store_calibration_{store_calibration} {
@@ -15,6 +16,7 @@ EnsensoCalibratorNode::EnsensoCalibratorNode(
 	services_.record_calibration    .connect(*this, record_calibration_service, wait_for_services);
 	services_.finalize_calibration  .connect(*this, finalize_calibration_service, wait_for_services);
 	services_.get_calibration       .connect(*this, get_calibration_service, wait_for_services);
+	services_.workspace_calibration .connect(*this, workspace_calibration_service, wait_for_services);
 }
 
 estd::result<void, estd::error> EnsensoCalibratorNode::initializeCalibration(InitializeCalibrationConfig const & config) {
@@ -80,6 +82,26 @@ estd::result<Eigen::Isometry3d, estd::error> EnsensoCalibratorNode::getCalibrati
 	try {
 		dr_msgs::GetPose::Response response = services_.get_calibration(request);
 		return dr::toEigen(response.data);
+	} catch (dr::ServiceError const & e) {
+		return estd::error{e.what()};
+	}
+}
+
+estd::result<Eigen::Isometry3d, estd::error> EnsensoCalibratorNode::workspaceCalibration(
+	Eigen::Isometry3d const & pattern_pose, ///< Pose of the pattern, defined in the frame to calibrate to.
+	std::string const & frame_id,           ///< The name of the frame to calibrate to.
+	int samples                             ///< Number of sampels to average the results over, useful for reducing possible noise.
+) {
+	// Call the workspace calibration from the dr_ensenso_node.
+	dr_ensenso_msgs::Calibrate::Request request;
+	request.frame_id = frame_id;
+	request.pattern  = dr::toRosPose(pattern_pose);
+	request.samples  = samples;
+
+	try {
+		// Call the service from dr_ensenso_node.
+		dr_ensenso_msgs::Calibrate::Response response = services_.workspace_calibration(request);
+		return dr::toEigen(response.camera_pose);
 	} catch (dr::ServiceError const & e) {
 		return estd::error{e.what()};
 	}
