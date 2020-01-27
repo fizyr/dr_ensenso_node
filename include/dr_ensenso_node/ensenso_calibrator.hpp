@@ -2,6 +2,7 @@
 
 #include <dr_ensenso_msgs/InitializeCalibration.h>
 #include <dr_msgs/GetPose.h>
+#include <dr_ensenso/calibration_param.hpp>
 #include <dr_msgs/SendPose.h>
 #include <dr_ensenso_msgs/FinalizeCalibration.h>
 #include <dr_ros/service_client.hpp>
@@ -18,29 +19,6 @@ namespace dr {
 
 class EnsensoCalibratorNode: public Node {
 public:
-	struct InitializeCalibrationConfig {
-		/// If true, the camera is attached to the moving frame; if false, it is attached to the fixed frame.
-		/// Additionally, the calibration plate is assumed to be attached to the other frame.
-		bool camera_moving;
-
-		/// Name of the moving frame (usually the name of the robot end effector).
-		std::string moving_frame;
-
-		/// Name of the fixed frame (usually the name of the robot base frame).
-		std::string fixed_frame;
-
-		/// Initial guess of the pose of the camera, can be used to speed up the calibration optimization.
-		/// Depending on the value of camera_moving, this pose is defined in either moving_frame or fixed_frame.
-		std::optional<Eigen::Isometry3d> camera_guess;
-
-		/// Initial guess of the pattern, can be used to speed up the calibration optimization.
-		/// Depending on the value of camera_moving, this pose is defined in either moving_frame or fixed_frame.
-		std::optional<Eigen::Isometry3d> pattern_guess;
-
-		/// Directory in which calibration information will be stored (leave empty to disable).
-		std::string dump_dir;
-	};
-
 	struct CalibrationResult {
 		/// Calibrated pose of the camera in either moving_frame or fixed_frame (depending on camera_moving).
 		Eigen::Isometry3d camera_pose;
