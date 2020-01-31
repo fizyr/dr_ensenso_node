@@ -4,7 +4,7 @@
 #include <dr_eigen/yaml.hpp>
 #include <dr_ensenso/ensenso.hpp>
 #include <dr_ensenso/util.hpp>
-#include <dr_ensenso/ensenso_types.hpp>
+#include <dr_ensenso/types.hpp>
 #include <dr_ros/node.hpp>
 #include <dr_util/timestamp.hpp>
 

@@ -2,7 +2,7 @@
 
 #include <dr_ensenso_msgs/InitializeCalibration.h>
 #include <dr_msgs/GetPose.h>
-#include <dr_ensenso/calibration_param.hpp>
+#include <dr_ensenso/param.hpp>
 #include <dr_msgs/SendPose.h>
 #include <dr_ensenso_msgs/FinalizeCalibration.h>
 #include <dr_ros/service_client.hpp>
