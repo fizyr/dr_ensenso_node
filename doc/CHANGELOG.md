@@ -7,6 +7,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 
 ### Added
 
 ### Changed
+
+### Removed
+
+## 0.2.15 - 2020-04-02
+### Added
+- Enable cropping from roi.
+
+### Changed
+
+### Removed
+
+## 0.2.14 - 2020-03-02
+### Added
+
+### Changed
 - Added camera pose as output for the Calibrate service file.
 
 ### Removed
