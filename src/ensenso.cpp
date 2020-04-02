@@ -89,6 +89,9 @@ class EnsensoNode: public Node {
 	/// If true, and separate_trigger is true, enable the front light when recording 2D images.
 	bool front_light;
 
+	/// If true, crop the roi from the image and point cloud.
+	bool crop_to_roi;
+
 	/// The frame in which the image and point clouds are send.
 	std::string camera_frame;
 
@@ -240,6 +243,7 @@ protected:
 		register_pointcloud = getParam<bool>("register_point_cloud");
 		separate_trigger    = getParam<bool>("separate_trigger", false);
 		front_light         = getParam<bool>("front_light",     false);
+		crop_to_roi         = getParam<bool>("crop_to_roi",     false);
 		publish_data        = getParam<bool>("publish_data",    true);
 		save_data           = getParam<bool>("save_data",       true);
 		timeout             = getParam<int>("timeout",          1500);
@@ -374,15 +378,15 @@ protected:
 	}
 
 	cv::Mat loadImage() {
-		return ensenso_camera->loadImage(image_source);
+		return ensenso_camera->loadImage(image_source, crop_to_roi);
 	}
 
 	pcl::PointCloud<pcl::PointXYZ> loadPointCloud() {
 		pcl::PointCloud<pcl::PointXYZ> cloud;
 		if (register_pointcloud) {
-			cloud = ensenso_camera->loadRegisteredPointCloud();
+			cloud = ensenso_camera->loadRegisteredPointCloud(crop_to_roi);
 		} else {
-			cloud = ensenso_camera->loadPointCloud();
+			cloud = ensenso_camera->loadPointCloud(crop_to_roi);
 		}
 		cloud.header.frame_id = camera_frame;
 		return cloud;
